@@ -34,7 +34,7 @@ const FEATURES = [
   [CpuIcon, 'AI-powered matching', 'Smart ranking surfaces the most likely lost↔found pairs with a confidence score and reason.'],
   [LockIcon, 'Privacy first', 'Verification answers stay private and personal contact is shared only when you choose.'],
   [ShieldCheckIcon, 'Verified claims', 'Claimants prove ownership before any handover, so items reach the right person.'],
-  [UsersIcon, 'Admin oversight', 'The lost-property desk moderates posts, approves claims, and oversees valuables.'],
+  [UsersIcon, 'Admin oversight', 'Admins moderate posts, review claims, and keep track of items handed in at the desk.'],
   [BellIcon, 'Real-time alerts', 'Instant in-app and email notifications the moment a strong match appears.'],
   [MapPinIcon, 'Made for SMVDU', 'Campus-aware locations and access restricted to the SMVDU community.'],
 ];
@@ -61,7 +61,7 @@ function HeroMedia() {
         </span>
         <div>
           <strong style={{ display: 'block', fontSize: 'var(--fs-sm)' }}>
-            Official Lost &amp; Found Desk
+            Campus Lost &amp; Found
           </strong>
           <span className="muted" style={{ fontSize: 'var(--fs-xs)' }}>
             Verified &amp; secure handovers
@@ -87,7 +87,7 @@ export default function Landing() {
               <span className="accent">FoundIt</span> reunites it.
             </h1>
             <p className="hero__lead">
-              The official lost &amp; found platform for the SMVDU community. Report a lost
+              A lost &amp; found platform built for the SMVDU community. Report a lost
               or found item in seconds and let our AI matching engine reconnect you — with a
               safe, mediated handover.
             </p>

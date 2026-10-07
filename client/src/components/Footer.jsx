@@ -14,7 +14,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="muted" style={{ fontSize: 'var(--fs-sm)', maxWidth: '20rem' }}>
-              The official lost &amp; found platform for the Shri Mata Vaishno Devi
+              A lost &amp; found platform built for the Shri Mata Vaishno Devi
               University community — report, match with AI, and reunite safely.
             </p>
           </div>
