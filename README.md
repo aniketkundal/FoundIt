@@ -1,6 +1,6 @@
 # FoundIt — Smart Campus Lost & Found for SMVDU
 
-**Live:** https://foundit-self.vercel.app
+**Live:** https://found-it-six.vercel.app
 
 FoundIt is a lost-and-found platform for **Shri Mata Vaishno Devi University (SMVDU)**. Anyone in the SMVDU community can report a lost or found item in seconds, and an **AI matching engine** automatically surfaces likely matches between lost and found reports — with a safe, mediated, admin-overseen **claim-and-handover** flow.
 
