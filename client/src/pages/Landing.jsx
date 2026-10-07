@@ -10,7 +10,6 @@ import {
   HandHeartIcon,
   ClipboardCheckIcon,
   UsersIcon,
-  TrendingUpIcon,
   LockIcon,
   BellIcon,
   MapPinIcon,
@@ -23,11 +22,12 @@ const STEPS = [
   ['Reunite', HandHeartIcon, 'Arrange a safe, mediated handover and mark the item collected.'],
 ];
 
+// Factual highlights only (no usage numbers we can't back up).
 const STATS = [
-  [ClipboardCheckIcon, '1,200+', 'Items reported'],
-  [HandHeartIcon, '850+', 'Items reunited'],
-  [UsersIcon, '2,500+', 'Active users'],
-  [TrendingUpIcon, '98%', 'Success rate'],
+  [ClipboardCheckIcon, '3 steps', 'Report an item in a minute'],
+  [CpuIcon, 'AI', 'Every match has a score and a reason'],
+  [LockIcon, 'SMVDU', 'Only the campus community can sign in'],
+  [ShieldCheckIcon, '₹0', 'Free for every student'],
 ];
 
 const FEATURES = [

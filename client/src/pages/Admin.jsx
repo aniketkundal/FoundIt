@@ -28,6 +28,7 @@ export default function Admin() {
   const [resets, setResets] = useState([]);
   const [items, setItems] = useState([]);
   const [desk, setDesk] = useState([]);
+  const [reunited, setReunited] = useState([]);
   const [audit, setAudit] = useState([]);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -42,6 +43,7 @@ export default function Admin() {
     api('/admin/reset-requests?status=pending').then((r) => setResets(r.requests)).catch(() => {});
     api('/admin/items').then((r) => setItems(r.items)).catch(() => {});
     api('/admin/desk-items').then((r) => setDesk(r.items)).catch(() => {});
+    api('/admin/items?status=collected').then((r) => setReunited(r.items)).catch(() => {});
     api('/admin/audit').then((r) => setAudit(r.entries)).catch(() => {});
   }, []);
 
@@ -184,6 +186,29 @@ export default function Admin() {
                     <td><Link to={`/items/${i.id}`}>{i.title}</Link></td>
                     <td>{i.location}</td>
                     <td><StatusBadge status={i.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
+
+      {/* Reunited items — hidden from Browse, kept here as the record */}
+      <Section title="Reunited items (collected)" count={reunited.length}>
+        {reunited.length === 0 ? (
+          <Empty>No items have been collected yet.</Empty>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>Item</th><th>Type</th><th>Reporter</th><th>Reported</th></tr></thead>
+              <tbody>
+                {reunited.map((i) => (
+                  <tr key={i.id}>
+                    <td><Link to={`/items/${i.id}`}>{i.title}</Link></td>
+                    <td><TypeBadge type={i.type} /></td>
+                    <td>{i.reporter?.name || '—'}</td>
+                    <td>{formatDate(i.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

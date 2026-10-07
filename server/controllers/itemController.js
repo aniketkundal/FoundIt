@@ -10,6 +10,7 @@ import {
   LOCATIONS,
   HELD_BY,
   ITEM_STATUSES,
+  RESOLVED_STATUSES,
 } from '../config/constants.js';
 
 // Small helper: validate a value is one of an allowed list.
@@ -141,6 +142,9 @@ export const getItemMatches = asyncHandler(async (req, res) => {
     .map((m) => {
       const other = m.lostItem?._id.toString() === id ? m.foundItem : m.lostItem;
       if (!other || other.status === 'removed') return null;
+      // Don't suggest an item that is already finished (e.g. handed to someone
+      // else); a confirmed match stays visible as the history of a handover.
+      if (RESOLVED_STATUSES.includes(other.status) && m.status !== 'confirmed') return null;
       return { matchId: m._id, score: m.score, reason: m.reason, item: other.toPublic() };
     })
     .filter(Boolean);
@@ -159,14 +163,20 @@ export const listItems = asyncHandler(async (req, res) => {
   if (category && CATEGORIES.includes(category)) filter.category = category;
   if (location && LOCATIONS.includes(location)) filter.location = location;
 
-  // The browse feed never shows moderation-removed items — to anyone, including
-  // admins. Removed items are managed only from the Admin dashboard.
+  // The browse feed shows only items that are still "in play". Finished items
+  // (collected / closed / expired) and moderation-removed items are hidden from
+  // everyone; their record stays in the Admin dashboard, and the item page still
+  // opens from a direct link (notifications, emails).
   // Only a known status *string* is accepted — a crafted query like
   // ?status[$in][]=removed would otherwise reach MongoDB as an operator.
-  if (typeof status === 'string' && status !== 'removed' && ITEM_STATUSES.includes(status)) {
+  if (
+    typeof status === 'string' &&
+    ITEM_STATUSES.includes(status) &&
+    !RESOLVED_STATUSES.includes(status)
+  ) {
     filter.status = status;
   } else {
-    filter.status = { $ne: 'removed' };
+    filter.status = { $nin: RESOLVED_STATUSES };
   }
 
   let query = Item.find(filter);

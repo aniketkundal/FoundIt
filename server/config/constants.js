@@ -81,5 +81,9 @@ export const ITEM_STATUSES = [
   'removed',
 ];
 
+// Finished items: no longer claimable, so they are hidden from the browse feed
+// (the record stays in the database and in the admin dashboard).
+export const RESOLVED_STATUSES = ['collected', 'closed', 'expired', 'removed'];
+
 // Where a found item is currently held.
 export const HELD_BY = ['finder', 'desk'];
