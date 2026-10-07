@@ -9,6 +9,7 @@ import {
   CATEGORIES,
   LOCATIONS,
   HELD_BY,
+  ITEM_STATUSES,
 } from '../config/constants.js';
 
 // Small helper: validate a value is one of an allowed list.
@@ -160,7 +161,9 @@ export const listItems = asyncHandler(async (req, res) => {
 
   // The browse feed never shows moderation-removed items — to anyone, including
   // admins. Removed items are managed only from the Admin dashboard.
-  if (status && status !== 'removed') {
+  // Only a known status *string* is accepted — a crafted query like
+  // ?status[$in][]=removed would otherwise reach MongoDB as an operator.
+  if (typeof status === 'string' && status !== 'removed' && ITEM_STATUSES.includes(status)) {
     filter.status = status;
   } else {
     filter.status = { $ne: 'removed' };
@@ -169,7 +172,7 @@ export const listItems = asyncHandler(async (req, res) => {
   let query = Item.find(filter);
   let sort = { createdAt: -1 };
 
-  if (q && q.trim()) {
+  if (typeof q === 'string' && q.trim()) {
     filter.$text = { $search: q.trim() };
     query = Item.find(filter, { score: { $meta: 'textScore' } });
     sort = { score: { $meta: 'textScore' }, createdAt: -1 };
@@ -269,5 +272,10 @@ export const updateItem = asyncHandler(async (req, res) => {
 export const deleteItem = asyncHandler(async (req, res) => {
   const item = await loadOwnedItem(req);
   await item.deleteOne();
+  // Clean up records that point at the deleted item so nothing is left dangling.
+  await Promise.all([
+    Match.deleteMany({ $or: [{ lostItem: item._id }, { foundItem: item._id }] }),
+    Claim.deleteMany({ item: item._id }),
+  ]);
   res.json({ ok: true });
 });

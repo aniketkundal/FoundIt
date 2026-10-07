@@ -3,7 +3,7 @@ import Match from '../models/Match.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { rankMatches } from './gemini.js';
-import { sendEmail, brandedEmail } from './email.js';
+import { sendEmail, brandedEmail, escapeHtml } from './email.js';
 import { env } from '../config/env.js';
 
 const DATE_WINDOW_DAYS = 30;
@@ -25,9 +25,9 @@ async function notifyParty(user, { ownItem, otherItem, score }) {
       subject: `FoundIt: possible match for "${ownItem.title}"`,
       html: brandedEmail(
         'We found a possible match! 🎯',
-        `<p>Hi ${user.name},</p>
+        `<p>Hi ${escapeHtml(user.name)},</p>
          <p>Our matching engine found a <strong>${score}% likely match</strong> for your
-         ${ownItem.type} item <strong>"${ownItem.title}"</strong>.</p>
+         ${ownItem.type} item <strong>"${escapeHtml(ownItem.title)}"</strong>.</p>
          <p>Open your item to review the suggested match and contact the other person:</p>
          <p><a href="${env.CLIENT_URL}${link}" style="color:#c24e1e">View match on FoundIt</a></p>`
       ),

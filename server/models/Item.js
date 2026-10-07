@@ -37,6 +37,8 @@ const itemSchema = new Schema(
 
     reporter: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: { type: String, enum: ITEM_STATUSES, default: 'open', index: true },
+    // Set when an admin removes the item, so restoring returns it to that status.
+    statusBeforeRemoval: { type: String, enum: ITEM_STATUSES, default: undefined },
 
     // Reserved for the optional embeddings/vector-search upgrade (roadmap).
     embedding: { type: [Number], select: false, default: undefined },
@@ -59,8 +61,10 @@ itemSchema.methods.checkVerifyingAnswer = function checkVerifyingAnswer(plain) {
 };
 
 // Public shape. Never leaks the answer hash or embedding. The reporter is
-// reduced to a display name + id — contact details are never exposed (the
-// platform mediates contact). Set `withReporterContact` only server-side.
+// reduced to id + name, plus their phone *only* when the route populated it
+// (item detail / matches). Every item route requires a logged-in SMVDU member,
+// so the phone is visible to the verified community only — by design, so a
+// finder and owner can call or WhatsApp each other.
 itemSchema.methods.toPublic = function toPublic() {
   const reporter =
     this.reporter && this.reporter.name

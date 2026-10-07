@@ -9,7 +9,13 @@ import { LockIcon } from '../components/Icons.jsx';
 
 const STEPS = ['Basics', 'Details', 'Verification'];
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Local date (yyyy-mm-dd). toISOString() alone is UTC, which is still
+// "yesterday" between 00:00 and 05:30 IST.
+const today = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+};
 
 export default function ReportItem() {
   const config = useConfig();
@@ -34,6 +40,8 @@ export default function ReportItem() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  // Block Next/Submit while a photo is still uploading, so it isn't dropped.
+  const [photoUploading, setPhotoUploading] = useState(false);
   // Guard against accidental submit: when the final step appears, the Submit
   // button briefly renders where "Next" was tapped — on touch a "ghost tap"
   // can land on it. Disable submit for a moment after arriving on the step.
@@ -233,7 +241,11 @@ export default function ReportItem() {
 
               <div className="field">
                 <span className="field__label">Photo</span>
-                <PhotoUpload value={form.photoUrl} onChange={set('photoUrl')} />
+                <PhotoUpload
+                  value={form.photoUrl}
+                  onChange={set('photoUrl')}
+                  onUploadingChange={setPhotoUploading}
+                />
               </div>
             </div>
           )}
@@ -299,11 +311,11 @@ export default function ReportItem() {
               <span />
             )}
             {step < STEPS.length - 1 ? (
-              <button type="button" className="btn" onClick={next} disabled={!stepValid()}>
+              <button type="button" className="btn" onClick={next} disabled={!stepValid() || photoUploading}>
                 Next →
               </button>
             ) : (
-              <button type="submit" className="btn" disabled={submitting || !canSubmit}>
+              <button type="submit" className="btn" disabled={submitting || !canSubmit || photoUploading}>
                 {submitting ? 'Submitting…' : 'Submit report'}
               </button>
             )}

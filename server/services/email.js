@@ -32,6 +32,17 @@ export async function sendEmail({ to, toName, subject, html, text }) {
   return { ok: true, messageId: (await res.json().catch(() => ({}))).messageId };
 }
 
+// Escape user-supplied text (names, item titles) before putting it into email
+// HTML, so nobody can inject links or markup into emails sent to other users.
+export function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Simple branded wrapper so all emails look consistent.
 export function brandedEmail(title, bodyHtml) {
   return `

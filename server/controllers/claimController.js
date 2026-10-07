@@ -5,7 +5,7 @@ import Match from '../models/Match.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { ApiError, asyncHandler } from '../middleware/error.js';
-import { sendEmail, brandedEmail } from '../services/email.js';
+import { sendEmail, brandedEmail, escapeHtml } from '../services/email.js';
 import { logAudit } from '../services/audit.js';
 import { env } from '../config/env.js';
 
@@ -96,7 +96,7 @@ export const createClaim = asyncHandler(async (req, res) => {
     link: `/items/${item._id}`,
     subject: `FoundIt: new claim on "${item.title}"`,
     title: 'You have a new claim to review',
-    bodyHtml: `<p>${req.user.name} has claimed your item <strong>"${item.title}"</strong>.</p>
+    bodyHtml: `<p>${escapeHtml(req.user.name)} has claimed your item <strong>"${escapeHtml(item.title)}"</strong>.</p>
       <p>Review their answer to your verification question and approve or reject the claim:</p>
       <p><a href="${env.CLIENT_URL}/items/${item._id}" style="color:#c24e1e">Review the claim</a></p>`,
   });
@@ -147,6 +147,10 @@ async function loadReviewable(req) {
 export const approveClaim = asyncHandler(async (req, res) => {
   const claim = await loadReviewable(req);
   if (claim.status !== 'pending') throw new ApiError(409, 'This claim is already resolved');
+  // A moderated (removed) item must not come back to life through a claim.
+  if (claim.item.status === 'removed') {
+    throw new ApiError(409, 'This item was removed by an admin');
+  }
 
   claim.status = 'approved';
   claim.reviewer = req.user._id;
@@ -172,7 +176,7 @@ export const approveClaim = asyncHandler(async (req, res) => {
     link: `/items/${claim.item._id}`,
     subject: `FoundIt: your claim was approved 🎉`,
     title: 'Your claim was approved!',
-    bodyHtml: `<p>Good news — your claim for <strong>"${claim.item.title}"</strong> was approved.</p>
+    bodyHtml: `<p>Good news — your claim for <strong>"${escapeHtml(claim.item.title)}"</strong> was approved.</p>
       <p>Open the item to see the contact details and arrange a safe handover:</p>
       <p><a href="${env.CLIENT_URL}/items/${claim.item._id}" style="color:#c24e1e">View item & contact</a></p>`,
   });
@@ -197,7 +201,7 @@ export const rejectClaim = asyncHandler(async (req, res) => {
     link: `/items/${claim.item._id}`,
     subject: `FoundIt: update on your claim`,
     title: 'Update on your claim',
-    bodyHtml: `<p>Your claim for <strong>"${claim.item.title}"</strong> was not approved this time.</p>
+    bodyHtml: `<p>Your claim for <strong>"${escapeHtml(claim.item.title)}"</strong> was not approved this time.</p>
       <p>If you believe it's yours, you can contact the lost-property desk.</p>`,
   });
 
@@ -225,6 +229,10 @@ export const markCollected = asyncHandler(async (req, res) => {
   if (!item) throw new ApiError(404, 'Item not found');
   if (!isOwnerOrAdmin(item, req.user)) {
     throw new ApiError(403, 'Only the reporter or an admin can mark this collected');
+  }
+  // Same rule the UI shows: a handover only happens after a claim is approved.
+  if (item.status !== 'claim_approved') {
+    throw new ApiError(409, 'Approve a claim before marking this item collected');
   }
 
   item.status = 'collected';
@@ -255,7 +263,7 @@ export const markCollected = asyncHandler(async (req, res) => {
       link: `/items/${item._id}`,
       subject: `FoundIt: "${item.title}" collected`,
       title: 'Item collected — reunited! 🎉',
-      bodyHtml: `<p>"<strong>${item.title}</strong>" has been marked as collected. Thanks for using FoundIt!</p>`,
+      bodyHtml: `<p>"<strong>${escapeHtml(item.title)}</strong>" has been marked as collected. Thanks for using FoundIt!</p>`,
     });
   }
 

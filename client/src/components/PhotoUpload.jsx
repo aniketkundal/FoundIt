@@ -5,7 +5,7 @@ import { ImageIcon } from './Icons.jsx';
 
 // Optional photo field. Uploads directly to Cloudinary and reports back the
 // hosted URL via onChange. Shows a preview and lets the user remove it.
-export default function PhotoUpload({ value, onChange }) {
+export default function PhotoUpload({ value, onChange, onUploadingChange }) {
   const config = useConfig();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -17,6 +17,7 @@ export default function PhotoUpload({ value, onChange }) {
     if (!file) return;
     setError('');
     setUploading(true);
+    onUploadingChange?.(true);
     try {
       const url = await uploadToCloudinary(file, config.cloudinary);
       onChange(url);
@@ -24,6 +25,7 @@ export default function PhotoUpload({ value, onChange }) {
       setError(err.message);
     } finally {
       setUploading(false);
+      onUploadingChange?.(false);
     }
   };
 

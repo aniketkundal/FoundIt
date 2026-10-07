@@ -34,6 +34,13 @@ export function errorHandler(err, req, res, next) {
     details = Object.values(err.errors).map((e) => e.message);
   }
 
+  // Malformed ObjectId in a URL (e.g. /api/items/abc) → 400 instead of a 500.
+  if (err.name === 'CastError') {
+    status = 400;
+    message = `Invalid ${err.path || 'id'}`;
+    details = undefined;
+  }
+
   // Duplicate key (e.g. email already registered) → 409.
   if (err.code === 11000) {
     status = 409;

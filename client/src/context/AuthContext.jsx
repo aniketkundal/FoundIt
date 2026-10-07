@@ -18,8 +18,8 @@ export function AuthProvider({ children }) {
     }
     api('/auth/me')
       .then(({ user }) => active && setUser(user))
-      .catch(() => {
-        setToken(null);
+      .catch((err) => {
+        if (err.status === 401) setToken(null);
         if (active) setUser(null);
       })
       .finally(() => active && setLoading(false));

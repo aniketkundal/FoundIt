@@ -43,7 +43,11 @@ export default function ClaimsPanel({ itemId, onChange }) {
     }
   };
 
-  if (!claims) return null;
+  if (!claims) {
+    return error ? (
+      <div className="form-alert form-alert--error" role="alert">{error}</div>
+    ) : null;
+  }
 
   return (
     <section className="glass" style={{ padding: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>

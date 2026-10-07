@@ -34,6 +34,8 @@ export default function ItemDetail() {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Errors from actions (delete, collect, cancel) show inline and keep the page.
+  const [actionError, setActionError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showClaim, setShowClaim] = useState(false);
@@ -51,6 +53,8 @@ export default function ItemDetail() {
 
   useEffect(() => {
     setLoading(true);
+    setError('');
+    setActionError('');
     load();
   }, [load]);
 
@@ -70,7 +74,7 @@ export default function ItemDetail() {
       await api(`/items/${id}`, { method: 'DELETE' });
       navigate('/home');
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
       setDeleting(false);
     }
   };
@@ -82,7 +86,7 @@ export default function ItemDetail() {
       await api(`/items/${id}/collected`, { method: 'POST' });
       await load();
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     } finally {
       setBusy(false);
     }
@@ -94,7 +98,7 @@ export default function ItemDetail() {
       await api(`/claims/${myClaim.id}/cancel`, { method: 'POST' });
       await load();
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     } finally {
       setBusy(false);
     }
@@ -126,6 +130,12 @@ export default function ItemDetail() {
       <Link to="/home" className="nav__link" style={{ display: 'inline-block', marginBottom: 'var(--sp-4)' }}>
         ← Back to browse
       </Link>
+
+      {actionError && (
+        <div className="form-alert form-alert--error" role="alert">
+          {actionError}
+        </div>
+      )}
 
       <article className="detail">
         <div className="detail__media glass">

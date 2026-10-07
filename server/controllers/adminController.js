@@ -5,7 +5,8 @@ import Claim from '../models/Claim.js';
 import AuditLog from '../models/AuditLog.js';
 import PasswordResetRequest from '../models/PasswordResetRequest.js';
 import { ApiError, asyncHandler } from '../middleware/error.js';
-import { sendEmail, brandedEmail } from '../services/email.js';
+import { sendEmail, brandedEmail, escapeHtml } from '../services/email.js';
+import { ITEM_STATUSES } from '../config/constants.js';
 import { logAudit } from '../services/audit.js';
 import { env } from '../config/env.js';
 
@@ -51,7 +52,7 @@ export const approveResetRequest = asyncHandler(async (req, res) => {
       subject: 'Your FoundIt temporary password',
       html: brandedEmail(
         'Password reset approved',
-        `<p>Hi ${user.name},</p>
+        `<p>Hi ${escapeHtml(user.name)},</p>
          <p>An admin approved your password reset. Use this temporary password to log in:</p>
          <p style="font-size:20px;font-weight:700;letter-spacing:1px;background:#f7f5f2;padding:12px 16px;border-radius:10px;display:inline-block">${temp}</p>
          <p>For your security, please log in and change it right away from
@@ -125,8 +126,9 @@ export const listPendingClaims = asyncHandler(async (req, res) => {
 export const listItemsAdmin = asyncHandler(async (req, res) => {
   const { q, status } = req.query;
   const filter = {};
-  if (status) filter.status = status;
-  if (q && q.trim()) filter.$text = { $search: q.trim() };
+  // Only accept plain strings from the query (blocks ?status[$ne]=x style operator injection).
+  if (typeof status === 'string' && ITEM_STATUSES.includes(status)) filter.status = status;
+  if (typeof q === 'string' && q.trim()) filter.$text = { $search: q.trim() };
   const items = await Item.find(filter)
     .sort({ createdAt: -1 })
     .limit(50)
@@ -146,8 +148,12 @@ export const listDeskItems = asyncHandler(async (req, res) => {
 export const removeItem = asyncHandler(async (req, res) => {
   const item = await Item.findById(req.params.id);
   if (!item) throw new ApiError(404, 'Item not found');
-  item.status = 'removed';
-  await item.save();
+  if (item.status !== 'removed') {
+    // Remember where it was so "restore" can put it back exactly.
+    item.statusBeforeRemoval = item.status;
+    item.status = 'removed';
+    await item.save();
+  }
   await logAudit(req.user, 'item_remove', item.title, { itemId: item._id });
   res.json({ ok: true });
 });
@@ -156,8 +162,11 @@ export const removeItem = asyncHandler(async (req, res) => {
 export const restoreItem = asyncHandler(async (req, res) => {
   const item = await Item.findById(req.params.id);
   if (!item) throw new ApiError(404, 'Item not found');
-  item.status = 'open';
-  await item.save();
+  if (item.status === 'removed') {
+    item.status = item.statusBeforeRemoval || 'open';
+    item.statusBeforeRemoval = undefined;
+    await item.save();
+  }
   await logAudit(req.user, 'item_restore', item.title, { itemId: item._id });
   res.json({ ok: true });
 });

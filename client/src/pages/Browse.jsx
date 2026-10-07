@@ -131,7 +131,7 @@ export default function Browse() {
         <p className="muted center" style={{ marginTop: 'var(--sp-8)' }}>
           Loading items…
         </p>
-      ) : data && data.items.length === 0 ? (
+      ) : !data ? null : data.items.length === 0 ? (
         <div className="empty glass">
           <span className="iconbox">
             <SearchIcon />

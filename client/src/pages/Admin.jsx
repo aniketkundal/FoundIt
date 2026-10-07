@@ -67,7 +67,7 @@ export default function Admin() {
   const reviewClaim = (id, action) =>
     run(`claim-${id}`, async () => {
       await api(`/claims/${id}/${action}`, { method: 'POST' });
-      return `Claim ${action}d.`;
+      return `Claim ${action === 'approve' ? 'approved' : 'rejected'}.`;
     });
 
   const reviewReset = (id, action) =>
@@ -121,7 +121,7 @@ export default function Admin() {
               <tbody>
                 {claims.map((c) => (
                   <tr key={c.id}>
-                    <td><Link to={`/items/${c.item?.id}`}>{c.item?.title || '—'}</Link></td>
+                    <td>{c.item ? <Link to={`/items/${c.item.id}`}>{c.item.title}</Link> : '—'}</td>
                     <td>{c.claimant?.name || '—'}</td>
                     <td>
                       {c.answer || <span className="muted">—</span>}{' '}

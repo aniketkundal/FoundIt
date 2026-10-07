@@ -10,7 +10,7 @@ export default function Notifications() {
   // Refresh on open, and mark everything read shortly after viewing.
   useEffect(() => {
     refresh();
-    const t = setTimeout(() => markAllRead(), 1200);
+    const t = setTimeout(() => markAllRead().catch(() => {}), 1200);
     return () => clearTimeout(t);
   }, [refresh, markAllRead]);
 

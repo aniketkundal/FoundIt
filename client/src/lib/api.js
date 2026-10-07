@@ -25,6 +25,13 @@ export async function api(path, { method = 'GET', body, headers = {} } = {}) {
   const data = isJson ? await res.json() : await res.text();
 
   if (!res.ok) {
+    // A 401 while we hold a token means the session expired or is invalid:
+    // clear it and send the user to log in again. /auth/* calls are left to
+    // AuthContext (the startup /auth/me check must not redirect visitors).
+    if (res.status === 401 && token && !path.startsWith('/auth/')) {
+      setToken(null);
+      if (window.location.pathname !== '/login') window.location.assign('/login');
+    }
     const message = (data && data.error) || `Request failed (${res.status})`;
     const err = new Error(message);
     err.status = res.status;
